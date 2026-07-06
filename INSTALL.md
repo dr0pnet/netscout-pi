@@ -6,7 +6,6 @@
 - Raspberry Pi OS Lite (64-bit)
 - USB Wi-Fi adapter (monitor mode capable)
 - Bluetooth adapter (optional)
-- nRF24L01+
 - ESP32
 - GPS module
 - Raspberry Pi Touch Display
@@ -38,7 +37,6 @@ sudo raspi-config
 ```
 
 Enable:
-- SPI
 - I2C (if required)
 - Serial UART (GPS if used)
 - Bluetooth
