@@ -1,0 +1,295 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Bluetooth Radar</title>
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    .radar-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    canvas {
+      background: radial-gradient(circle, #001a2b 0%, #000 70%);
+      border: 1px solid #00ccff;
+      border-radius: 50%;
+      box-shadow: 0 0 25px rgba(0, 204, 255, 0.45);
+    }
+
+    .radar-note {
+      text-align: center;
+      color: #99eaff;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Bluetooth Radar</h1>
+  <p>Nearby Bluetooth devices by signal proximity</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/bluetooth.html'">← Back to Bluetooth</button>
+  <button onclick="loadRadar()">Refresh</button>
+</section>
+
+<section class="card">
+  <h2>Live Bluetooth Radar</h2>
+
+  <div class="radar-wrap">
+    <canvas id="radar" width="620" height="620"></canvas>
+  </div>
+
+  <p class="radar-note">
+    Center = NetScout. Stronger Bluetooth signals appear closer to center.
+  </p>
+
+  <div id="radar-status">Loading...</div>
+</section>
+
+</main>
+
+<script>
+const canvas = document.getElementById("radar");
+const ctx = canvas.getContext("2d");
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const maxRadius = 270;
+
+let devices = [];
+let sweepAngle = 0;
+
+function hashString(text) {
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return Math.abs(hash);
+}
+
+function getRSSI(device) {
+  const raw =
+    device.rssi ||
+    device.RSSI ||
+    device.signal ||
+    device.strength ||
+    "";
+
+  const match = String(raw).match(/-?\d+/);
+
+  if (!match) {
+    return null;
+  }
+
+  return parseInt(match[0]);
+}
+
+function rssiToStrength(rssi) {
+  if (rssi === null) {
+    return 45;
+  }
+
+  if (rssi >= -45) return 95;
+  if (rssi >= -55) return 80;
+  if (rssi >= -65) return 65;
+  if (rssi >= -75) return 45;
+  if (rssi >= -85) return 28;
+
+  return 15;
+}
+
+function qualityColor(strength) {
+  if (strength >= 80) return "#00ccff";
+  if (strength >= 60) return "#00ffcc";
+  if (strength >= 40) return "#ffff00";
+  return "#ff4444";
+}
+
+function drawRadarGrid() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = "rgba(0,204,255,0.25)";
+  ctx.lineWidth = 1;
+
+  for (let r = 70; r <= maxRadius; r += 70) {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(centerX - maxRadius, centerY);
+  ctx.lineTo(centerX + maxRadius, centerY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - maxRadius);
+  ctx.lineTo(centerX, centerY + maxRadius);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(0,204,255,0.45)";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawSweep() {
+  const angle = sweepAngle;
+  const x = centerX + Math.cos(angle) * maxRadius;
+  const y = centerY + Math.sin(angle) * maxRadius;
+
+  const gradient = ctx.createRadialGradient(
+    centerX,
+    centerY,
+    0,
+    centerX,
+    centerY,
+    maxRadius
+  );
+
+  gradient.addColorStop(0, "rgba(0,204,255,0.25)");
+  gradient.addColorStop(1, "rgba(0,204,255,0)");
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.arc(centerX, centerY, maxRadius, angle - 0.22, angle);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(0,204,255,0.8)";
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCenter() {
+  ctx.fillStyle = "#00ccff";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#00ccff";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 18, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "14px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("NETSC0UT", centerX, centerY + 38);
+}
+
+function drawDevices() {
+  for (const device of devices) {
+    const name =
+      device.name ||
+      device.device ||
+      device.alias ||
+      "Unknown";
+
+    const mac =
+      device.mac ||
+      device.address ||
+      device.id ||
+      name;
+
+    const rssi = getRSSI(device);
+    const strength = rssiToStrength(rssi);
+
+    const hash = hashString(mac);
+    const angle = (hash % 360) * Math.PI / 180;
+
+    const distance = maxRadius - ((strength / 100) * (maxRadius - 40));
+
+    const x = centerX + Math.cos(angle) * distance;
+    const y = centerY + Math.sin(angle) * distance;
+
+    const color = qualityColor(strength);
+    const size = 5 + Math.round(strength / 18);
+
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14;
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    const label = name.length > 16 ? name.slice(0, 16) + "…" : name;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x, y - 14);
+
+    ctx.fillStyle = color;
+
+    if (rssi !== null) {
+      ctx.fillText(rssi + " dBm", x, y + 24);
+    } else {
+      ctx.fillText("seen", x, y + 24);
+    }
+  }
+}
+
+function animate() {
+  drawRadarGrid();
+  drawSweep();
+  drawDevices();
+  drawCenter();
+
+  sweepAngle += 0.035;
+
+  if (sweepAngle > Math.PI * 2) {
+    sweepAngle = 0;
+  }
+
+  requestAnimationFrame(animate);
+}
+
+async function loadRadar() {
+  const status = document.getElementById("radar-status");
+  status.innerHTML = "Scanning Bluetooth...";
+
+  try {
+    const res = await fetch("/api/bluetooth");
+    const data = await res.json();
+
+    devices = Array.isArray(data) ? data : [];
+
+    status.innerHTML = `
+      <b>${devices.length}</b> Bluetooth device${devices.length === 1 ? "" : "s"} detected
+    `;
+
+  } catch {
+    status.innerHTML = "Unable to load Bluetooth radar data.";
+  }
+}
+
+loadRadar();
+setInterval(loadRadar, 5000);
+animate();
+</script>
+
+</body>
+</html>

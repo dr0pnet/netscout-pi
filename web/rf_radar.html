@@ -1,0 +1,249 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout RF Radar</title>
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    .radar-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    canvas {
+      background: radial-gradient(circle, #002b12 0%, #000 70%);
+      border: 1px solid #00ff66;
+      border-radius: 50%;
+      box-shadow: 0 0 25px rgba(0, 255, 102, 0.45);
+    }
+
+    .radar-note {
+      text-align: center;
+      color: #8cffb3;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>RF Radar</h1>
+  <p>Signal proximity view of nearby Wi-Fi access points</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/wifi.html'">← Back to Wi-Fi</button>
+  <button onclick="loadRadar()">Refresh</button>
+</section>
+
+<section class="card">
+  <h2>Live Signal Radar</h2>
+
+  <div class="radar-wrap">
+    <canvas id="radar" width="620" height="620"></canvas>
+  </div>
+
+  <p class="radar-note">
+    Center = NetScout. Stronger signals appear closer to center.
+  </p>
+
+  <div id="radar-status">Loading...</div>
+</section>
+
+</main>
+
+<script>
+const canvas = document.getElementById("radar");
+const ctx = canvas.getContext("2d");
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const maxRadius = 270;
+
+let networks = [];
+let sweepAngle = 0;
+
+function hashString(text) {
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return Math.abs(hash);
+}
+
+function getSignal(net) {
+  const raw = String(net.best_signal || net.signal || "0");
+  const clean = raw.replace(/[^0-9]/g, "");
+  return clean ? parseInt(clean) : 0;
+}
+
+function qualityColor(signal) {
+  if (signal >= 80) return "#00ff66";
+  if (signal >= 60) return "#aaff00";
+  if (signal >= 40) return "#ffff00";
+  return "#ff4444";
+}
+
+function drawRadarGrid() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = "rgba(0,255,102,0.25)";
+  ctx.lineWidth = 1;
+
+  for (let r = 70; r <= maxRadius; r += 70) {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(centerX - maxRadius, centerY);
+  ctx.lineTo(centerX + maxRadius, centerY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - maxRadius);
+  ctx.lineTo(centerX, centerY + maxRadius);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(0,255,102,0.45)";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawSweep() {
+  const angle = sweepAngle;
+  const x = centerX + Math.cos(angle) * maxRadius;
+  const y = centerY + Math.sin(angle) * maxRadius;
+
+  const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+  gradient.addColorStop(0, "rgba(0,255,102,0.25)");
+  gradient.addColorStop(1, "rgba(0,255,102,0)");
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.arc(centerX, centerY, maxRadius, angle - 0.22, angle);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(0,255,102,0.8)";
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawNetScoutCenter() {
+  ctx.fillStyle = "#00ff66";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#00ff66";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 18, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "14px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("NETSC0UT", centerX, centerY + 38);
+}
+
+function drawNetworks() {
+  for (const net of networks) {
+    const signal = getSignal(net);
+    const id = net.bssid || net.ssid || Math.random().toString();
+
+    const hash = hashString(id);
+    const angle = (hash % 360) * Math.PI / 180;
+
+    const strength = Math.min(Math.max(signal, 1), 100);
+
+    // Strong signal = closer to center
+    const distance = maxRadius - ((strength / 100) * (maxRadius - 40));
+
+    const x = centerX + Math.cos(angle) * distance;
+    const y = centerY + Math.sin(angle) * distance;
+
+    const color = qualityColor(signal);
+    const size = 5 + Math.round(signal / 18);
+
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14;
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+
+    const ssid = net.ssid || "<hidden>";
+    const label = ssid.length > 16 ? ssid.slice(0, 16) + "…" : ssid;
+
+    ctx.fillText(label, x, y - 14);
+    ctx.fillStyle = color;
+    ctx.fillText(signal + "%", x, y + 24);
+  }
+}
+
+function animate() {
+  drawRadarGrid();
+  drawSweep();
+  drawNetworks();
+  drawNetScoutCenter();
+
+  sweepAngle += 0.035;
+
+  if (sweepAngle > Math.PI * 2) {
+    sweepAngle = 0;
+  }
+
+  requestAnimationFrame(animate);
+}
+
+async function loadRadar() {
+  const status = document.getElementById("radar-status");
+  status.innerHTML = "Scanning wlan1...";
+
+  try {
+    const res = await fetch("/api/wifi");
+    const data = await res.json();
+
+    networks = Array.isArray(data) ? data : [];
+
+    status.innerHTML = `
+      <b>${networks.length}</b> access point group${networks.length === 1 ? "" : "s"} detected
+    `;
+
+  } catch (err) {
+    status.innerHTML = "Unable to load RF radar data.";
+  }
+}
+
+loadRadar();
+setInterval(loadRadar, 5000);
+animate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,14 @@
+[Unit]
+Description=NetScout Pi Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/netscout-pi
+ExecStart=/opt/netscout-pi/venv/bin/python3 /opt/netscout-pi/app.py
+Restart=always
+RestartSec=5
+User=pi
+
+[Install]
+WantedBy=multi-user.target

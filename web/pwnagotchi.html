@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pwnagotchi Live Feed</title>
+    <style>
+        body { 
+            font-family: monospace; 
+            background: #0a0a0a; 
+            color: #0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 2px solid #0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        .stat { color: #0f0; }
+        .stat span { color: #fff; font-weight: bold; }
+        .terminal {
+            border: 1px solid #0f0;
+            padding: 10px;
+            height: 80vh;
+            overflow-y: auto;
+            background: #000;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .line { margin: 0; }
+        .attack { color: #ff0; }
+        .handshake { color: #f0f; font-weight: bold; background: #333; }
+        .error { color: #f00; }
+        .info { color: #0af; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🧠 PWNAGOTCHI LIVE FEED</h2>
+        <div class="stats">
+            <div class="stat">Uptime: <span id="uptime">-</span>s</div>
+            <div class="stat">Channel: <span id="channel">-</span></div>
+            <div class="stat">Networks: <span id="networks">-</span></div>
+            <div class="stat">Deauths: <span id="deauths">-</span></div>
+            <div class="stat">Handshakes: <span id="handshakes">-</span></div>
+        </div>
+    </div>
+    
+    <div class="terminal" id="terminal">Connecting...</div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const stats = { uptime: 0, channel: 1, networks: 0, deauths: 0, handshakes: 0 };
+        
+        // Strip ANSI escape codes
+        function stripAnsi(str) {
+            return str.replace(/\x1b\[[0-9;]*m/g, '')
+                      .replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');
+        }
+        
+        // Parse stats from output lines
+        function parseLine(line) {
+            const patterns = {
+                uptime: /Uptime:\s+(\d+)/,
+                channel: /Channel:\s+(\d+)/,
+                networks: /Networks:\s+(\d+)/,
+                clients: /Clients:\s+(\d+)/,
+                deauths: /Deauths:\s+(\d+)/,
+                handshakes: /Handshakes:\s+(\d+)/
+            };
+            
+            for (const [key, regex] of Object.entries(patterns)) {
+                const match = line.match(regex);
+                if (match) {
+                    document.getElementById(key).textContent = match[1];
+                }
+            }
+        }
+        
+        // Connect to SSE stream
+        const evtSource = new EventSource('/api/tools/pwnagotchi/output');
+        
+        evtSource.onopen = () => {
+            terminal.innerHTML = '';
+        };
+        
+        evtSource.onmessage = (e) => {
+            const rawLine = e.data;
+            const cleanLine = stripAnsi(rawLine);
+            
+            if (!cleanLine.trim()) return;
+            
+            const div = document.createElement('div');
+            div.className = 'line';
+            div.textContent = cleanLine;
+            
+            // Color coding
+            if (cleanLine.includes('Attacking')) div.className += ' attack';
+            if (cleanLine.includes('HANDSHAKE')) div.className += ' handshake';
+            if (cleanLine.includes('error') || cleanLine.includes('Error')) div.className += ' error';
+            if (cleanLine.includes('Initializing') || cleanLine.includes('Starting')) div.className += ' info';
+            
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            parseLine(cleanLine);
+        };
+        
+        evtSource.onerror = () => {
+            terminal.innerHTML += '\n[Connection lost - retrying...]';
+        };
+    </script>
+</body>
+</html>

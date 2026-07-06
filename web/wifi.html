@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Pi - Wi-Fi</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+  <h1>Wi-Fi Inventory</h1>
+  <p>Nearby wireless network scan</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/'">← Home</button>
+  <button onclick="refreshWifiPage()">Refresh</button>
+</section>
+
+<section class="card">
+  <h2>Connected Wi-Fi</h2>
+  <div id="connected-wifi">
+    Loading connected Wi-Fi...
+  </div>
+</section>
+
+<section class="card">
+  <div id="wifi-summary">
+    Loading Wi-Fi summary...
+  </div>
+</section>
+
+<section class="card">
+  <button onclick="location.href='/channel_analyzer.html'">Channel Analyzer</button>
+  <button onclick="location.href='/speedtest.html'">Speed Test</button>
+  <button onclick="location.href='/rf_radar.html'">RF Radar</button>
+</section>
+
+<section class="card">
+  <h2>Nearby Wi-Fi Networks</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>SSID</th>
+        <th>Channel</th>
+        <th>Frequency</th>
+        <th>Band</th>
+        <th>Best Signal</th>
+        <th>Radios</th>
+        <th>Security</th>
+      </tr>
+    </thead>
+
+    <tbody id="wifi-body">
+      <tr><td colspan="7">Loading...</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</main>
+
+<script>
+async function loadConnectedWifi() {
+  const box = document.getElementById("connected-wifi");
+
+  try {
+    const res = await fetch("/api/wifi/connected");
+    const wifi = await res.json();
+
+    box.innerHTML = `
+      <p><b>SSID:</b> ${wifi.ssid || "Unknown"}</p>
+      <p><b>Interface:</b> ${wifi.interface || "Unknown"}</p>
+      <p><b>Signal:</b> ${wifi.signal || "Unknown"}% (${wifi.quality || "Unknown"})</p>
+      <p><b>State:</b> ${wifi.state || "Unknown"}</p>
+    `;
+  } catch (err) {
+    box.innerHTML = "Error loading connected Wi-Fi";
+  }
+}
+
+async function loadWifi() {
+  const tbody = document.getElementById("wifi-body");
+  tbody.innerHTML = "<tr><td colspan='7'>Scanning nearby Wi-Fi...</td></tr>";
+
+  try {
+    const res = await fetch("/api/wifi");
+    const networks = await res.json();
+
+    const totalNetworks = networks.length;
+
+    const strongSignals =
+      networks.filter(n => parseInt(n.best_signal || 0) >= 80).length;
+
+    const openNetworks =
+      networks.filter(n =>
+        !n.security ||
+        n.security.toLowerCase() === "open"
+      ).length;
+
+    document.getElementById("wifi-summary").innerHTML = `
+      <b>Nearby SSIDs Found:</b> ${totalNetworks}<br>
+      <b>Strong Signals:</b> ${strongSignals}<br>
+      <b>Open Networks:</b> ${openNetworks}<br>
+      <b>Last Scan:</b> Just now
+    `;
+
+    tbody.innerHTML = "";
+
+    if (!networks || networks.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='7'>No Wi-Fi networks found</td></tr>";
+      return;
+    }
+
+    networks.forEach(net => {
+      let signalClass = "signal-weak";
+
+      if (net.quality === "Excellent") {
+        signalClass = "signal-excellent";
+      } else if (net.quality === "Good") {
+        signalClass = "signal-good";
+      } else if (net.quality === "Fair") {
+        signalClass = "signal-fair";
+      }
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${net.ssid || "Hidden"}</td>
+          <td>${net.channels || "Unknown"}</td>
+          <td>${net.frequency || "Unknown"}</td>
+          <td>${net.band || "Unknown"}</td>
+          <td class="${signalClass}">${net.best_signal || "Unknown"}% (${net.quality || "Unknown"})</td>
+          <td>${net.bssid_count || 0}</td>
+          <td>${net.security || "Unknown"}</td>
+        </tr>
+      `;
+    });
+
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='7'>Error loading Wi-Fi networks</td></tr>";
+  }
+}
+
+function refreshWifiPage() {
+  loadConnectedWifi();
+  loadWifi();
+}
+
+refreshWifiPage();
+setInterval(refreshWifiPage, 30000);
+</script>
+
+</body>
+</html>

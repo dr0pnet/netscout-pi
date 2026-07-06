@@ -1,0 +1,274 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Device Radar</title>
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    .radar-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    canvas {
+      background: radial-gradient(circle, #2b2200 0%, #000 70%);
+      border: 1px solid #ffaa00;
+      border-radius: 50%;
+      box-shadow: 0 0 25px rgba(255, 170, 0, 0.45);
+    }
+
+    .radar-note {
+      text-align: center;
+      color: #ffd27a;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Device Radar</h1>
+  <p>LAN devices discovered around NetScout</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/devices.html'">← Back to Devices</button>
+  <button onclick="loadRadar()">Refresh</button>
+</section>
+
+<section class="card">
+  <h2>Local Network Radar</h2>
+
+  <div class="radar-wrap">
+    <canvas id="radar" width="620" height="620"></canvas>
+  </div>
+
+  <p class="radar-note">
+    Center = NetScout. Devices are arranged by IP/vendor identity, not physical direction.
+  </p>
+
+  <div id="radar-status">Loading...</div>
+</section>
+
+</main>
+
+<script>
+const canvas = document.getElementById("radar");
+const ctx = canvas.getContext("2d");
+
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const maxRadius = 270;
+
+let devices = [];
+let sweepAngle = 0;
+
+function hashString(text) {
+  let hash = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return Math.abs(hash);
+}
+
+function ipLastOctet(ip) {
+  const parts = String(ip || "").split(".");
+  const last = parseInt(parts[parts.length - 1]);
+
+  if (isNaN(last)) {
+    return 128;
+  }
+
+  return last;
+}
+
+function deviceColor(device) {
+  const vendor = String(device.vendor || "").toLowerCase();
+  const state = String(device.state || "").toLowerCase();
+
+  if (state.includes("reachable")) return "#ffaa00";
+  if (vendor.includes("apple")) return "#ffffff";
+  if (vendor.includes("samsung")) return "#00ccff";
+  if (vendor.includes("raspberry")) return "#ff66aa";
+  if (vendor.includes("amazon")) return "#66ff66";
+  if (vendor.includes("google")) return "#66aaff";
+  return "#ffaa00";
+}
+
+function drawRadarGrid() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = "rgba(255,170,0,0.25)";
+  ctx.lineWidth = 1;
+
+  for (let r = 70; r <= maxRadius; r += 70) {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(centerX - maxRadius, centerY);
+  ctx.lineTo(centerX + maxRadius, centerY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - maxRadius);
+  ctx.lineTo(centerX, centerY + maxRadius);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(255,170,0,0.45)";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, maxRadius, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawSweep() {
+  const angle = sweepAngle;
+  const x = centerX + Math.cos(angle) * maxRadius;
+  const y = centerY + Math.sin(angle) * maxRadius;
+
+  const gradient = ctx.createRadialGradient(
+    centerX,
+    centerY,
+    0,
+    centerX,
+    centerY,
+    maxRadius
+  );
+
+  gradient.addColorStop(0, "rgba(255,170,0,0.25)");
+  gradient.addColorStop(1, "rgba(255,170,0,0)");
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.arc(centerX, centerY, maxRadius, angle - 0.22, angle);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255,170,0,0.8)";
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCenter() {
+  ctx.fillStyle = "#ffaa00";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#ffaa00";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 18, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "14px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("NETSC0UT", centerX, centerY + 38);
+}
+
+function drawDevices() {
+  for (const device of devices) {
+    const ip = device.ip || device.address || "";
+    const mac = device.mac || "";
+    const vendor = device.vendor || "Unknown";
+    const state = device.state || "";
+
+    const id = mac || ip || vendor;
+    const hash = hashString(id);
+
+    const angle = (hash % 360) * Math.PI / 180;
+
+    // LAN has no real distance, so use last IP octet to create stable spacing
+    const octet = ipLastOctet(ip);
+    const normalized = Math.min(Math.max(octet / 255, 0.15), 0.95);
+    const distance = 60 + normalized * (maxRadius - 90);
+
+    const x = centerX + Math.cos(angle) * distance;
+    const y = centerY + Math.sin(angle) * distance;
+
+    const color = deviceColor(device);
+    const size = state.toLowerCase().includes("reachable") ? 10 : 7;
+
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14;
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    const labelBase = vendor !== "Unknown" ? vendor : ip;
+    const label = String(labelBase).length > 16
+      ? String(labelBase).slice(0, 16) + "…"
+      : String(labelBase);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "12px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x, y - 14);
+
+    ctx.fillStyle = color;
+    ctx.fillText(ip, x, y + 24);
+  }
+}
+
+function animate() {
+  drawRadarGrid();
+  drawSweep();
+  drawDevices();
+  drawCenter();
+
+  sweepAngle += 0.035;
+
+  if (sweepAngle > Math.PI * 2) {
+    sweepAngle = 0;
+  }
+
+  requestAnimationFrame(animate);
+}
+
+async function loadRadar() {
+  const status = document.getElementById("radar-status");
+  status.innerHTML = "Loading LAN devices...";
+
+  try {
+    const res = await fetch("/api/devices");
+    const data = await res.json();
+
+    devices = Array.isArray(data) ? data : [];
+
+    status.innerHTML = `
+      <b>${devices.length}</b> LAN device${devices.length === 1 ? "" : "s"} detected
+    `;
+
+  } catch {
+    status.innerHTML = "Unable to load LAN device radar data.";
+  }
+}
+
+loadRadar();
+setInterval(loadRadar, 5000);
+animate();
+</script>
+
+</body>
+</html>

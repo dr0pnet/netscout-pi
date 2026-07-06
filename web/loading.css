@@ -1,0 +1,220 @@
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #001a0a 0%, #000 70%);
+  color: #00ff66;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
+}
+
+.boot-screen {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand {
+  font-size: 56px;
+  font-weight: bold;
+  letter-spacing: 10px;
+  color: white;
+  text-shadow: 0 0 18px rgba(0, 255, 102, 0.8);
+  margin-bottom: 10px;
+}
+
+.brand span {
+  color: #00ff66;
+}
+
+.subtitle {
+  font-size: 20px;
+  letter-spacing: 4px;
+  margin-bottom: 30px;
+  text-shadow: 0 0 12px #00ff66;
+}
+
+.radar {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 102, 0.7);
+  background:
+    repeating-radial-gradient(
+      circle,
+      rgba(0,255,102,0.15) 0px,
+      rgba(0,255,102,0.15) 1px,
+      transparent 2px,
+      transparent 38px
+    ),
+    linear-gradient(rgba(0,255,102,0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,102,0.25) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  box-shadow:
+    0 0 25px rgba(0,255,102,0.5),
+    inset 0 0 25px rgba(0,255,102,0.2);
+  overflow: hidden;
+}
+
+.radar::before,
+.radar::after {
+  content: "";
+  position: absolute;
+  background: rgba(0,255,102,0.35);
+}
+
+.radar::before {
+  width: 100%;
+  height: 1px;
+  top: 50%;
+  left: 0;
+}
+
+.radar::after {
+  height: 100%;
+  width: 1px;
+  left: 50%;
+  top: 0;
+}
+
+.sweep {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  left: 50%;
+  top: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(0,255,102,0.75),
+    rgba(0,255,102,0.15),
+    transparent 70%
+  );
+  transform-origin: 0% 100%;
+  animation: sweep 2.2s linear infinite;
+  filter: blur(1px);
+}
+
+@keyframes sweep {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.blip {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #00ff66;
+  border-radius: 50%;
+  box-shadow: 0 0 16px #00ff66;
+  animation: blink 1.8s infinite;
+}
+
+.b1 {
+  top: 85px;
+  left: 210px;
+}
+
+.b2 {
+  top: 190px;
+  left: 90px;
+  animation-delay: 0.4s;
+}
+
+.b3 {
+  top: 235px;
+  left: 235px;
+  animation-delay: 0.8s;
+}
+
+.b4 {
+  top: 120px;
+  left: 120px;
+  animation-delay: 1.2s;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+
+.checks {
+  position: absolute;
+  left: 80px;
+  top: 34%;
+  font-size: 16px;
+  line-height: 34px;
+  color: rgba(255,255,255,0.75);
+}
+
+.checks .done {
+  color: #00ff66;
+  text-shadow: 0 0 8px #00ff66;
+}
+
+.progress-wrap {
+  width: 70%;
+  height: 18px;
+  border: 1px solid #00ff66;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 40px;
+  box-shadow: 0 0 14px rgba(0,255,102,0.5);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    #00aa33,
+    #00ff66,
+    #99ffaa
+  );
+  box-shadow: 0 0 20px #00ff66;
+  transition: width 0.08s linear;
+}
+
+.percent {
+  margin-top: 12px;
+  font-size: 22px;
+  text-shadow: 0 0 10px #00ff66;
+}
+
+@media (max-width: 700px) {
+  .brand {
+    font-size: 38px;
+    letter-spacing: 6px;
+  }
+
+  .radar {
+    width: 260px;
+    height: 260px;
+  }
+
+  .checks {
+    position: static;
+    margin-top: 25px;
+    text-align: center;
+  }
+
+  .progress-wrap {
+    width: 85%;
+  }
+}

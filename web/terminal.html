@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NETSC0UT Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .terminal-controls {
+      padding: 10px 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .terminal-frame {
+      width: calc(100% - 40px);
+      height: calc(100vh - 190px);
+      margin: 0 20px 20px 20px;
+      border: 1px solid #39ff14;
+      border-radius: 10px;
+      background: #000;
+    }
+
+    .keyboard {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      background: #050806;
+      border-top: 2px solid #39ff14;
+      padding: 10px;
+    }
+
+    .key-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .key {
+      min-width: 48px;
+      min-height: 44px;
+      font-size: 18px;
+    }
+
+    .wide {
+      min-width: 110px;
+    }
+
+    .space {
+      min-width: 260px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Terminal</h1>
+  <p>Interactive Shell</p>
+</header>
+
+<main>
+  <div class="terminal-controls">
+    <button onclick="location.href='/'">Home</button>
+    <button onclick="toggleKeyboard()">Keyboard</button>
+  </div>
+
+  <iframe
+    id="terminalFrame"
+    class="terminal-frame"
+    src="http://127.0.0.1:7681/?fontSize=40&fontFamily=monospace">
+  </iframe>
+</main>
+
+<div id="keyboard" class="keyboard">
+  <div class="key-row">
+    <button class="key" onclick="sendKey('1')">1</button>
+    <button class="key" onclick="sendKey('2')">2</button>
+    <button class="key" onclick="sendKey('3')">3</button>
+    <button class="key" onclick="sendKey('4')">4</button>
+    <button class="key" onclick="sendKey('5')">5</button>
+    <button class="key" onclick="sendKey('6')">6</button>
+    <button class="key" onclick="sendKey('7')">7</button>
+    <button class="key" onclick="sendKey('8')">8</button>
+    <button class="key" onclick="sendKey('9')">9</button>
+    <button class="key" onclick="sendKey('0')">0</button>
+  </div>
+
+  <div class="key-row">
+    <button class="key" onclick="sendKey('q')">Q</button>
+    <button class="key" onclick="sendKey('w')">W</button>
+    <button class="key" onclick="sendKey('e')">E</button>
+    <button class="key" onclick="sendKey('r')">R</button>
+    <button class="key" onclick="sendKey('t')">T</button>
+    <button class="key" onclick="sendKey('y')">Y</button>
+    <button class="key" onclick="sendKey('u')">U</button>
+    <button class="key" onclick="sendKey('i')">I</button>
+    <button class="key" onclick="sendKey('o')">O</button>
+    <button class="key" onclick="sendKey('p')">P</button>
+  </div>
+
+  <div class="key-row">
+    <button class="key" onclick="sendKey('a')">A</button>
+    <button class="key" onclick="sendKey('s')">S</button>
+    <button class="key" onclick="sendKey('d')">D</button>
+    <button class="key" onclick="sendKey('f')">F</button>
+    <button class="key" onclick="sendKey('g')">G</button>
+    <button class="key" onclick="sendKey('h')">H</button>
+    <button class="key" onclick="sendKey('j')">J</button>
+    <button class="key" onclick="sendKey('k')">K</button>
+    <button class="key" onclick="sendKey('l')">L</button>
+  </div>
+
+  <div class="key-row">
+    <button class="key wide" onclick="sendKey('Backspace')">⌫</button>
+    <button class="key" onclick="sendKey('z')">Z</button>
+    <button class="key" onclick="sendKey('x')">X</button>
+    <button class="key" onclick="sendKey('c')">C</button>
+    <button class="key" onclick="sendKey('v')">V</button>
+    <button class="key" onclick="sendKey('b')">B</button>
+    <button class="key" onclick="sendKey('n')">N</button>
+    <button class="key" onclick="sendKey('m')">M</button>
+    <button class="key wide" onclick="sendKey('Enter')">Enter</button>
+  </div>
+
+  <div class="key-row">
+    <button class="key wide" onclick="sendKey('Tab')">Tab</button>
+    <button class="key wide" onclick="sendKey('CtrlC')">Ctrl-C</button>
+    <button class="key" onclick="sendKey('Up')">↑</button>
+    <button class="key" onclick="sendKey('Down')">↓</button>
+    <button class="key" onclick="sendKey('Left')">←</button>
+    <button class="key" onclick="sendKey('Right')">→</button>
+    <button class="key space" onclick="sendKey('Space')">Space</button>
+    <button class="key wide" onclick="toggleKeyboard()">Hide</button>
+  </div>
+
+  <div class="key-row">
+    <button class="key" onclick="sendKey('/')">/</button>
+    <button class="key" onclick="sendKey('-')">-</button>
+    <button class="key" onclick="sendKey('_')">_</button>
+    <button class="key" onclick="sendKey('.')">.</button>
+    <button class="key" onclick="sendKey(':')">:</button>
+    <button class="key" onclick="sendKey('|')">|</button>
+    <button class="key" onclick="sendKey('~')">~</button>
+    <button class="key" onclick="sendKey('*')">*</button>
+    <button class="key" onclick="sendKey('=')">=</button>
+  </div>
+</div>
+
+<script>
+function toggleKeyboard() {
+  const kb = document.getElementById("keyboard");
+  const frame = document.getElementById("terminalFrame");
+
+  if (kb.style.display === "block") {
+    kb.style.display = "none";
+    frame.style.height = "calc(100vh - 190px)";
+  } else {
+    kb.style.display = "block";
+    frame.style.height = "calc(100vh - 430px)";
+  }
+}
+
+function sendKey(key) {
+  fetch("/api/terminal/key", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ key: key })
+  });
+}
+</script>
+
+</body>
+</html>

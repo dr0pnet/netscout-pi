@@ -1,0 +1,6 @@
+./bin/bluehound/tool.json
+./bin/esp-watch/tool.json
+./bin/deauth/tool.json
+./bin/cellular/tool.json
+./bin/handshake/tool.json
+./bin/sniffer/tool.json

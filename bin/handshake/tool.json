@@ -1,0 +1,12 @@
+{
+  "id": "handshake_cap",
+  "name": "Handshake Cap",
+  "icon": "radar",
+  "type": "console",
+  "category": "Wireless / Capture",
+  "description": "Captures WPA handshake activity using a monitor-mode Wi-Fi adapter.",
+  "command": "sudo -n /home/pi/netscout-pi/bin/handshake/aircrack-ng.sh",
+  "requires_interface": "wlan1",
+  "requires_monitor": true,
+  "auto_start": false
+}

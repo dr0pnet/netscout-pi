@@ -1,0 +1,13 @@
+{
+  "id": "cellular",
+  "name": "Cellular Sniffer",
+  "icon": "radar",
+  "type": "console",
+  "category": "Cellular",
+  "description": "Scans cellular-related RF activity and adapter status for metadata-only signal awareness, including bands, signal presence, and nearby tower activity where supported.",
+  "command": "sudo -n /home/pi/netscout-pi/bin/cellular/rotating-scans.sh",
+  "requires_interface": "",
+  "requires_device": "rtl-sdr",
+  "requires_monitor": false,
+  "auto_start": false
+}

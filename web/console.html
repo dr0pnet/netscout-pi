@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetSc0ut Console</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <h1>NetSc0ut Console</h1>
+  <p>Live tool process output</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2 id="toolName">No tool running</h2>
+    <p>Status: <span id="toolStatus">idle</span></p>
+    <p>Started: <span id="toolStarted">-</span></p>
+
+    <button onclick="stopTool()">Stop Tool</button>
+    <button onclick="clearConsole()">Clear Console</button>
+    <button onclick="location.href='/tools.html'">Back To Tools</button>
+  </section>
+
+  <section class="card">
+    <pre id="consoleBox" style="
+      background:#020402;
+      color:#39ff14;
+      padding:15px;
+      border:1px solid #39ff14;
+      border-radius:10px;
+      height:420px;
+      overflow:auto;
+      white-space:pre-wrap;
+      font-size:14px;
+    "></pre>
+  </section>
+</main>
+
+<script>
+async function loadConsole() {
+  const res = await fetch('/api/console');
+  const data = await res.json();
+
+  document.getElementById('toolName').textContent =
+    data.tool_name || 'No tool running';
+
+  document.getElementById('toolStatus').textContent =
+    data.status || 'idle';
+
+  document.getElementById('toolStarted').textContent =
+    data.started || '-';
+
+  const box = document.getElementById('consoleBox');
+  box.textContent = (data.lines || []).join('\n');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function stopTool() {
+  await fetch('/api/tools/stop', { method: 'POST' });
+  loadConsole();
+}
+
+async function clearConsole() {
+  await fetch('/api/console/clear', { method: 'POST' });
+  loadConsole();
+}
+
+setInterval(loadConsole, 1000);
+loadConsole();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NETSC0UT Loading</title>
+  <link rel="stylesheet" href="/loading.css">
+</head>
+<body>
+
+<div class="boot-screen">
+
+  <div class="brand">
+    NETSC<span>0</span>UT
+  </div>
+
+  <div class="subtitle" id="boot-message">
+    FINALIZING
+  </div>
+
+  <div class="radar">
+    <div class="sweep"></div>
+    <div class="blip b1"></div>
+    <div class="blip b2"></div>
+    <div class="blip b3"></div>
+    <div class="blip b4"></div>
+  </div>
+
+  <div class="checks">
+    <div id="check1">○ Loading Wi-Fi</div>
+    <div id="check2">○ Loading Bluetooth</div>
+    <div id="check3">○ Loading Tools</div>
+    <div id="check4">○ Loading Storage</div>
+    <div id="check5">○ Starting Dashboard</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <div class="percent" id="percent">0%</div>
+
+</div>
+
+<script>
+let progress = 0;
+
+const messages = [
+  "LOADING HARDWARE",
+  "CHECKING ADAPTERS",
+  "LOADING SERVICES",
+  "INITIALIZING TOOLS",
+  "FINALIZING",
+  "LAUNCHING DASHBOARD"
+];
+
+const checks = [
+  "check1",
+  "check2",
+  "check3",
+  "check4",
+  "check5"
+];
+
+const bar = document.getElementById("progress-bar");
+const percent = document.getElementById("percent");
+const bootMessage = document.getElementById("boot-message");
+
+const timer = setInterval(() => {
+  progress += 2;
+
+  if (progress > 100) {
+    progress = 100;
+  }
+
+  bar.style.width = progress + "%";
+  percent.innerText = progress + "%";
+
+  let msgIndex = Math.min(
+    Math.floor(progress / 18),
+    messages.length - 1
+  );
+
+  bootMessage.innerText = messages[msgIndex];
+
+  checks.forEach((id, index) => {
+    const el = document.getElementById(id);
+    if (progress >= (index + 1) * 18) {
+      el.innerText = "✓ " + el.innerText.replace("○ ", "").replace("✓ ", "");
+      el.classList.add("done");
+    }
+  });
+
+  if (progress >= 100) {
+    clearInterval(timer);
+    bootMessage.innerText = "ALL SYSTEMS READY";
+
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 1200);
+  }
+}, 80);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Pi - Devices</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+  <h1>Device Inventory</h1>
+  <p>LAN Device Identity</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/'">← Home</button>
+  <button onclick="loadDevices()">Refresh</button>
+</section>
+
+<section class="card">
+  <button onclick="startDeviceScan()">Start Scan</button>
+  <button onclick="stopDeviceScan()">Stop Scan</button>
+  <button onclick="location.href='/device_radar.html'">Device Radar</button>
+</section>
+
+<section class="card">
+  <div id="devices-summary">Loading device summary...</div>
+</section>
+
+<section id="devices-list">
+  <div class="card">Loading devices...</div>
+</section>
+
+</main>
+
+<script>
+async function loadDevices() {
+  const list = document.getElementById("devices-list");
+  list.innerHTML = "<div class='card'>Scanning LAN...</div>";
+
+  try {
+    const res = await fetch("/api/devices");
+    const devices = await res.json();
+
+    const totalDevices = devices.length;
+
+    const activeDevices = devices.filter(device => {
+      const state = (device.state || "").toLowerCase();
+      return state === "reachable" ||
+             state === "delay" ||
+             state === "stale" ||
+             state === "online" ||
+             state === "up";
+    }).length;
+
+    let deviceAge = "Unknown";
+
+    try {
+      const statusRes = await fetch("/api/scan_status");
+      const statusData = await statusRes.json();
+      deviceAge = statusData.devices || "Unknown";
+    } catch (err) {
+      deviceAge = "Unavailable";
+    }
+
+    document.getElementById("devices-summary").innerHTML = `
+      <b>Devices Found:</b> ${totalDevices}<br>
+      <b>Active/Seen:</b> ${activeDevices}<br>
+      <b>Last Scan:</b> ${deviceAge}
+    `;
+
+    if (!devices || devices.length === 0) {
+      list.innerHTML = "<div class='card'>No devices found.</div>";
+      return;
+    }
+
+    list.innerHTML = "";
+
+    devices.forEach(device => {
+      const services = device.services && device.services.length
+        ? device.services.join(", ")
+        : "None detected";
+
+      const card = document.createElement("section");
+      card.className = "card";
+
+      card.innerHTML = `
+        <h2>${device.name || "Unknown Device"}</h2>
+
+        <p><b>Type:</b> ${device.type || "Unknown Device"}</p>
+        <p><b>Vendor:</b> ${device.vendor || "Unknown"}</p>
+        <p><b>IP:</b> ${device.ip || "Unknown"}</p>
+        <p><b>MAC:</b> ${device.mac || "Unknown"}</p>
+        <p><b>OS:</b> ${device.os || "Unknown"}</p>
+        <p><b>State:</b> ${device.state || "Unknown"}</p>
+        <p><b>Confidence:</b> ${device.confidence || "Low"}</p>
+        <p><b>Services:</b><br>${services}</p>
+      `;
+
+      list.appendChild(card);
+    });
+
+  } catch (err) {
+    list.innerHTML = "<div class='card'>Error loading devices.</div>";
+  }
+}
+
+async function startDeviceScan() {
+  await fetch("/api/devices/start", { method: "POST" });
+  loadDevices();
+}
+
+async function stopDeviceScan() {
+  await fetch("/api/devices/stop", { method: "POST" });
+  loadDevices();
+}
+
+loadDevices();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,11 @@
+{
+  "id": "bluehound",
+  "name": "BlueHound",
+  "type": "console",
+  "category": "Bluetooth / BLE",
+  "description": "Scans nearby Bluetooth and BLE devices, including repeated beacon activity.",
+  "command": "sudo /home/pi/netscout-pi/bin/bluehound/bluehound",
+  "requires_interface": null,
+  "requires_monitor": false,
+  "auto_start": false
+}

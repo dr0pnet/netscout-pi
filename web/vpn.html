@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NetSC0UT VPN</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>NetSC0UT VPN</h1>
+      <a href="/">Dashboard</a>
+      <a href="/wifi">Wi-Fi</a>
+      <a href="/devices">Devices</a>
+      <a href="/bluetooth">Bluetooth</a>
+      <a href="/tools">Tools</a>
+      <a href="/vpn">VPN</a>
+    </header>
+
+    <section class="card">
+      <h2>WireGuard Status</h2>
+
+      <p>
+        Status:
+        <span id="vpn-state">Loading...</span>
+      </p>
+
+      <p>Interface: <span id="vpn-interface">-</span></p>
+      <p>VPN IP: <span id="vpn-ip">-</span></p>
+      <p>Endpoint: <span id="vpn-endpoint">-</span></p>
+      <p>Handshake: <span id="vpn-handshake">-</span></p>
+      <p>Transfer: <span id="vpn-transfer">-</span></p>
+
+      <button onclick="vpnAction('connect')">Connect</button>
+      <button onclick="vpnAction('disconnect')">Disconnect</button>
+      <button onclick="vpnAction('restart')">Restart</button>
+    </section>
+
+    <section class="card">
+      <h2>Raw WireGuard Info</h2>
+      <pre id="vpn-raw">Loading...</pre>
+    </section>
+  </div>
+
+<script>
+async function loadVpnStatus() {
+  try {
+    const res = await fetch("/api/vpn/status");
+    const data = await res.json();
+
+    const state = document.getElementById("vpn-state");
+
+    if (data.connected) {
+      state.textContent = "Connected";
+      state.style.color = "#00ff66";
+    } else {
+      state.textContent = "Disconnected";
+      state.style.color = "#ff4444";
+    }
+
+    document.getElementById("vpn-interface").textContent = data.interface || "-";
+    document.getElementById("vpn-ip").textContent = data.vpn_ip || "-";
+    document.getElementById("vpn-endpoint").textContent = data.endpoint || "-";
+    document.getElementById("vpn-handshake").textContent = data.handshake || "-";
+    document.getElementById("vpn-transfer").textContent = data.transfer || "-";
+    document.getElementById("vpn-raw").textContent = data.raw || data.error || "No data";
+  } catch (err) {
+    document.getElementById("vpn-state").textContent = "Error";
+    document.getElementById("vpn-raw").textContent = err;
+  }
+}
+
+async function vpnAction(action) {
+  const res = await fetch(`/api/vpn/${action}`, {
+    method: "POST"
+  });
+
+  const data = await res.json();
+
+  if (!data.ok) {
+    alert(data.error || "VPN action failed");
+  }
+
+  setTimeout(loadVpnStatus, 1000);
+}
+
+loadVpnStatus();
+setInterval(loadVpnStatus, 5000);
+</script>
+</body>
+</html>

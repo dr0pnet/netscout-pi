@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Pi - Bluetooth</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+  <h1>Bluetooth</h1>
+  <p>Nearby Bluetooth devices</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/'">← Home</button>
+  <button onclick="loadBluetooth()">Refresh</button>
+</section>
+
+<section class="card">
+  <button onclick="startBluetoothScan()">Start Scan</button>
+  <button onclick="stopBluetoothScan()">Stop Scan</button>
+  <button onclick="location.href='/bluetooth_radar.html'">Bluetooth Radar</button>
+</section>
+
+<section class="card">
+  <div id="bluetooth-summary">
+    Loading Bluetooth summary...
+  </div>
+</section>
+
+<section class="card">
+  <h2>Bluetooth Devices</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>MAC Address</th>
+        <th>RSSI</th>
+      </tr>
+    </thead>
+
+    <tbody id="bluetooth-body">
+      <tr>
+        <td colspan="3">Loading...</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+</main>
+
+<script>
+async function loadBluetooth() {
+  const tbody = document.getElementById("bluetooth-body");
+  tbody.innerHTML = "<tr><td colspan='3'>Loading Bluetooth devices...</td></tr>";
+
+  try {
+    const res = await fetch("/api/bluetooth");
+    const devices = await res.json();
+
+    const totalDevices = devices.length;
+
+    let bluetoothAge = "Unknown";
+
+    try {
+      const statusRes = await fetch("/api/scan_status");
+      const statusData = await statusRes.json();
+      bluetoothAge = statusData.bluetooth || "Unknown";
+    } catch (err) {
+      bluetoothAge = "Unavailable";
+    }
+
+    document.getElementById("bluetooth-summary").innerHTML = `
+      <b>Bluetooth Devices:</b> ${totalDevices}<br>
+      <b>Last Scan:</b> ${bluetoothAge}
+    `;
+
+    tbody.innerHTML = "";
+
+    if (!devices || devices.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='3'>No Bluetooth devices found</td></tr>";
+      return;
+    }
+
+    devices.forEach(device => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${device.name || "Unknown"}</td>
+          <td>${device.mac || device.address || "Unknown"}</td>
+          <td>${device.rssi || "Unknown"}</td>
+        </tr>
+      `;
+    });
+
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='3'>Error loading Bluetooth devices</td></tr>";
+  }
+}
+
+async function startBluetoothScan() {
+  try {
+    await fetch("/api/bluetooth/start", { method: "POST" });
+    loadBluetooth();
+  } catch (err) {
+    console.error("Error starting Bluetooth scan");
+  }
+}
+
+async function stopBluetoothScan() {
+  try {
+    await fetch("/api/bluetooth/stop", { method: "POST" });
+    loadBluetooth();
+  } catch (err) {
+    console.error("Error stopping Bluetooth scan");
+  }
+}
+
+loadBluetooth();
+</script>
+
+</body>
+</html>

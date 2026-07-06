@@ -1,0 +1,11 @@
+{
+  "id": "deauth",
+  "name": "Deauthenication",
+  "type": "console",
+  "category": "Wireless / Capture",
+  "description": "Sends Deauthenication packets in a hoping channel pattern.",
+  "command": "sudo /home/pi/netscout-pi/bin/deauth/deauther",
+  "requires_interface": "wlan1",
+  "requires_monitor": true,
+  "auto_start": false
+}

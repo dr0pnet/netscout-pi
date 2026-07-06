@@ -1,0 +1,12 @@
+{
+  "id": "esp_watch",
+  "name": "ESP Watch",
+  "icon": "radar",
+  "type": "console",
+  "category": "Wireless / Capture",
+  "description": "Passive ESP32/Espressif and Marauder-style activity detector. Triggers on Wi-Fi AP/beacons, probe requests/responses, ESP-like names/OUI, ESP-NOW/vendor action frames, probe floods, beacon spam, deauth/disassoc bursts, and BLE names.",
+  "command": "sudo -n /home/pi/netscout-pi/bin/esp-watch/run_console.sh wlan1 hci0 1,2,3,4,5,6,7,8,9,10,11,12,13 350 8",
+  "requires_interface": "wlan1",
+  "requires_monitor": true,
+  "auto_start": false
+}

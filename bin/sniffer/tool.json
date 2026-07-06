@@ -1,0 +1,12 @@
+{
+  "id": "sniffer",
+  "name": "Sniffer",
+  "icon": "radar",
+  "type": "console",
+  "category": "Wireless / Capture",
+  "description": "Runs wireless capture and streams output to the Netsc0ut console.",
+  "command": "sudo -n /home/pi/netscout-pi/bin/sniffer/sniffer wlan1 ./state",
+  "requires_interface": "wlan1",
+  "requires_monitor": true,
+  "auto_start": false
+}

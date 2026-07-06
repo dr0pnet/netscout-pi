@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Channel Analyzer</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <h1>Channel Analyzer</h1>
+  <p>Wi-Fi channel congestion and recommendation</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/wifi.html'">← Back to Wi-Fi</button>
+  <button onclick="loadChannels()">Refresh</button>
+</section>
+
+<section class="card">
+  <h2>2.4 GHz Channels</h2>
+  <div id="channels24">Loading...</div>
+  <div id="recommended24"></div>
+</section>
+
+<section class="card">
+  <h2>5 GHz Channels</h2>
+  <div id="channels5">Loading...</div>
+  <div id="recommended5"></div>
+</section>
+
+</main>
+
+<script>
+function renderChannelList(channels, boxId, recommendedId, recommended) {
+  const box = document.getElementById(boxId);
+  const recBox = document.getElementById(recommendedId);
+
+  const entries = Object.entries(channels)
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+
+  if (entries.length === 0) {
+    box.innerHTML = "No channel data found.";
+    recBox.innerHTML = "No recommendation available.";
+    return;
+  }
+
+  const max = Math.max(...entries.map(([_, count]) => count));
+
+  let html = "";
+
+  for (const [channel, count] of entries) {
+    const blocks = Math.max(1, Math.round((count / max) * 15));
+    const bar = "█".repeat(blocks);
+
+    html += `
+      <div style="margin: 12px 0; font-family: monospace; font-size: 18px;">
+        Channel ${channel.padStart(3, " ")} &nbsp;
+        <span style="color:#00ff66;">${bar}</span>
+        &nbsp; ${count} AP${count === 1 ? "" : "s"}
+      </div>
+    `;
+  }
+
+  box.innerHTML = html;
+
+  if (recommended) {
+    recBox.innerHTML = `
+      <p style="font-size:22px; color:#00ff66;">
+        ✓ Recommended: Channel ${recommended}
+      </p>
+    `;
+  } else {
+    recBox.innerHTML = "No recommendation available.";
+  }
+}
+
+async function loadChannels() {
+  const channels24Box = document.getElementById("channels24");
+  const channels5Box = document.getElementById("channels5");
+  const recommended24Box = document.getElementById("recommended24");
+  const recommended5Box = document.getElementById("recommended5");
+
+  channels24Box.innerHTML = "Scanning...";
+  channels5Box.innerHTML = "Scanning...";
+  recommended24Box.innerHTML = "Checking...";
+  recommended5Box.innerHTML = "Checking...";
+
+  try {
+    const res = await fetch("/api/channel_usage");
+    const data = await res.json();
+
+    const channels24 = data.channels_24 || {};
+    const channels5 = data.channels_5 || {};
+
+    const recommended24 = data.recommended_24;
+    const recommended5 = data.recommended_5;
+
+    renderChannelList(
+      channels24,
+      "channels24",
+      "recommended24",
+      recommended24
+    );
+
+    renderChannelList(
+      channels5,
+      "channels5",
+      "recommended5",
+      recommended5
+    );
+
+  } catch (err) {
+    channels24Box.innerHTML = "Unable to load 2.4 GHz channel data.";
+    channels5Box.innerHTML = "Unable to load 5 GHz channel data.";
+    recommended24Box.innerHTML = "Error checking recommendation.";
+    recommended5Box.innerHTML = "Error checking recommendation.";
+  }
+}
+
+loadChannels();
+</script>
+
+</body>
+</html>

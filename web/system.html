@@ -1,0 +1,283 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Pi - System</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <h1>System</h1>
+  <p>Application and Raspberry Pi health</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/'">← Home</button>
+  <button onclick="loadAdapters(); loadSdrStatus(); loadVpnStatus();">Refresh</button>
+</section>
+
+<section class="card">
+  <h2>Wireless Adapters</h2>
+  <div id="adapters">Loading adapters...</div>
+</section>
+
+
+<section class="card">
+  <h2>SDR Adapter</h2>
+
+  <div class="adapter-card">
+    <p>
+      <b>Device:</b> <span id="sdr-device">Checking...</span><br>
+      <b>Model:</b> <span id="sdr-model">Checking...</span><br>
+      <b>Serial:</b> <span id="sdr-serial">Checking...</span><br>
+      <b>Status:</b> <span id="sdr-status">Checking...</span>
+    </p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>VPN</h2>
+
+  <p>Status: <span id="vpn-state">Loading...</span></p>
+  <p>Interface: <span id="vpn-interface">-</span></p>
+  <p>VPN IP: <span id="vpn-ip">-</span></p>
+  <p>Endpoint: <span id="vpn-endpoint">-</span></p>
+  <p>Handshake: <span id="vpn-handshake">-</span></p>
+
+  <button onclick="vpnAction('connect')">Connect</button>
+  <button onclick="vpnAction('disconnect')">Disconnect</button>
+  <button onclick="vpnAction('restart')">Restart</button>
+</section>
+
+<section class="card">
+  <h2>Appliance Controls</h2>
+
+  <button onclick="restartNetScout()">Restart NetScout</button>
+  <button onclick="rebootPi()">Reboot Pi</button>
+  <button onclick="shutdownPi()">Shutdown Pi</button>
+</section>
+
+</main>
+
+<script>
+async function loadAdapters() {
+  const box = document.getElementById("adapters");
+  box.innerHTML = "Loading adapters...";
+
+  try {
+    const res = await fetch("/api/adapters");
+    const adapters = await res.json();
+
+    try {
+      await fetch("/api/adapter_changes");
+    } catch (err) {
+      console.log("adapter change check failed");
+    }
+
+    if (!adapters || adapters.length === 0) {
+      box.innerHTML = "No wireless adapters detected";
+      return;
+    }
+
+    box.innerHTML = "";
+
+    adapters.forEach(adapter => {
+      const iface = adapter.interface || "Unknown";
+
+      const primaryLabel =
+        iface === "wlan0"
+          ? "<span class='primary-interface'>PRIMARY</span>"
+          : "";
+
+      box.innerHTML += `
+        <div class="adapter-card">
+          <p>
+            <b>Interface:</b> ${iface} ${primaryLabel}<br>
+
+            <b>Mode:</b>
+            <span class="${adapter.mode === 'monitor' ? 'mode-monitor' : 'mode-managed'}">
+              ${adapter.mode || "Unknown"}
+            </span><br>
+
+            <b>MAC:</b> ${adapter.mac || "Unknown"}<br>
+
+            <b>State:</b>
+            <span class="${adapter.state === 'up' ? 'state-up' : 'state-down'}">
+              ${adapter.state || "Unknown"}
+            </span>
+          </p>
+
+          ${adapter.primary
+            ? `<button disabled>Primary Interface</button>`
+            : `
+              <button onclick="setAdapterMode('${iface}', 'managed')">Set Managed</button>
+              <button onclick="setAdapterMode('${iface}', 'monitor')">Set Monitor</button>
+            `
+          }
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    box.innerHTML = "Error loading adapters";
+  }
+}
+
+async function loadSdrStatus() {
+  const deviceEl = document.getElementById("sdr-device");
+  const modelEl = document.getElementById("sdr-model");
+  const serialEl = document.getElementById("sdr-serial");
+  const statusEl = document.getElementById("sdr-status");
+
+  if (!deviceEl || !modelEl || !serialEl || !statusEl) return;
+
+  try {
+    const res = await fetch("/api/adapters/sdr");
+    const data = await res.json();
+
+    if (!data.available || !data.devices || data.devices.length === 0) {
+      deviceEl.textContent = "No SDR detected";
+      modelEl.textContent = "None";
+      serialEl.textContent = "None";
+      statusEl.textContent = data.message || "Not found";
+      statusEl.style.color = "#ff4444";
+      return;
+    }
+
+    const dev = data.devices[0];
+
+    deviceEl.textContent = `${dev.type || "RTL-SDR"} #${dev.index || "0"}`;
+    modelEl.textContent = `${dev.vendor || "Unknown"} ${dev.model || ""}`.trim();
+    serialEl.textContent = dev.serial || "Unknown";
+    statusEl.textContent = dev.status || data.status || "ready";
+
+    if ((dev.status || data.status || "").toLowerCase() === "ready") {
+      statusEl.style.color = "#00ff66";
+    } else {
+      statusEl.style.color = "#ffaa00";
+    }
+
+  } catch (err) {
+    deviceEl.textContent = "SDR check failed";
+    modelEl.textContent = "Unknown";
+    serialEl.textContent = "Unknown";
+    statusEl.textContent = "API error";
+    statusEl.style.color = "#ff4444";
+  }
+}
+
+async function setAdapterMode(interfaceName, mode) {
+  try {
+    const res = await fetch("/api/adapters/mode", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        interface: interfaceName,
+        mode: mode
+      })
+    });
+
+    const result = await res.json();
+
+    if (result.ok) {
+      loadAdapters();
+    } else {
+      console.error(result.error || "mode change failed");
+    }
+
+  } catch (err) {
+    console.error("Error changing adapter mode");
+  }
+}
+
+async function restartNetScout() {
+  try {
+    await fetch("/api/restart_netscout", {
+      method: "POST"
+    });
+  } catch (err) {
+    console.error("Error restarting NetScout");
+  }
+}
+
+async function rebootPi() {
+  try {
+    await fetch("/api/reboot", {
+      method: "POST"
+    });
+  } catch (err) {
+    console.error("Error rebooting Pi");
+  }
+}
+
+async function shutdownPi() {
+  try {
+    await fetch("/api/shutdown", {
+      method: "POST"
+    });
+  } catch (err) {
+    console.error("Error shutting down Pi");
+  }
+}
+
+async function loadVpnStatus() {
+  try {
+    const res = await fetch("/api/vpn/status");
+    const data = await res.json();
+
+    const state = document.getElementById("vpn-state");
+
+    if (data.connected) {
+      state.textContent = "Connected";
+      state.style.color = "#00ff66";
+    } else {
+      state.textContent = "Disconnected";
+      state.style.color = "#ff4444";
+    }
+
+    document.getElementById("vpn-interface").textContent = data.interface || "-";
+    document.getElementById("vpn-ip").textContent = data.vpn_ip || "-";
+    document.getElementById("vpn-endpoint").textContent = data.endpoint || "-";
+    document.getElementById("vpn-handshake").textContent = data.handshake || "-";
+
+  } catch (err) {
+    document.getElementById("vpn-state").textContent = "Error";
+  }
+}
+
+async function vpnAction(action) {
+  try {
+    const res = await fetch(`/api/vpn/${action}`, {
+      method: "POST"
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      console.error(data.error || "VPN action failed");
+    }
+
+    setTimeout(loadVpnStatus, 1000);
+
+  } catch (err) {
+    console.error("VPN action failed");
+  }
+}
+
+
+loadAdapters();
+loadSdrStatus();
+loadVpnStatus();
+setInterval(loadAdapters, 10000);
+setInterval(loadSdrStatus, 10000);
+setInterval(loadVpnStatus, 5000);
+</script>
+
+</body>
+</html>
+

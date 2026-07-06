@@ -1,0 +1,83 @@
+./bin/bluehound/tool.json:  "command": "sudo /home/pi/netscout-pi/bin/bluehound/bluehound",
+./bin/esp-watch/esp_watch_wifi.cpp:              << "  sudo " << argv0 << " wlan1 1,2,3,4,5,6,7,8,9,10,11,12,13 350 1 --marauder-watch\n\n"
+./bin/esp-watch/run_console.sh:sudo ip link set "$WIFI_IFACE" down 2>/dev/null || true
+./bin/esp-watch/run_console.sh:sudo iw dev "$WIFI_IFACE" set type monitor 2>/dev/null || true
+./bin/esp-watch/run_console.sh:sudo ip link set "$WIFI_IFACE" up 2>/dev/null || true
+./bin/esp-watch/run_console.sh:sudo iw dev "$WIFI_IFACE" set channel "$FIRST_CH" HT20 2>/dev/null || true
+./bin/esp-watch/tool.json:  "command": "sudo -n /home/pi/netscout-pi/bin/esp-watch/run_console.sh wlan1 hci0 1,2,3,4,5,6,7,8,9,10,11,12,13 350 8",
+./bin/deauth/tool.json:  "command": "sudo /home/pi/netscout-pi/bin/deauth/deauther",
+./bin/cellular/sms_sniffer.c: * Usage: sudo ./sms_sniffer -f 941.8e6
+./bin/cellular/imsi_catcher.c: * Usage: sudo ./imsi_catcher -f 941.8e6 -g 40
+./bin/cellular/traffic_monitor.c: * Usage: sudo ./traffic_monitor -f 941.8e6
+./bin/cellular/tool.json:  "command": "sudo -n /home/pi/netscout-pi/bin/cellular/rotating-scans.sh",
+./bin/cellular/downlink_recorder.c: * Usage: sudo ./downlink_recorder -f 941.8e6 -o capture.dat
+./bin/cellular/tower_scanner.c: * Usage: sudo ./tower_scanner
+./bin/handshake/hcxtools/.travis.yml:sudo: false
+./bin/handshake/hcxtools/.github/ISSUE_TEMPLATE/bug_report.md:1. $ sudo hcxpcapngtool -v
+./bin/handshake/hcxtools/.github/workflows/cpush.yml:           sudo apt update
+./bin/handshake/hcxtools/.github/workflows/cpush.yml:           sudo apt install -y libcurl4-gnutls-dev
+./bin/handshake/hcxtools/usefulscripts/pireadcard:sudo mount /dev/"$DEVICE"1 boot
+./bin/handshake/hcxtools/usefulscripts/pireadcard:sudo tar -zcvf ../rpiboot.tgz .
+./bin/handshake/hcxtools/usefulscripts/pireadcard:sudo mount /dev/"$DEVICE"2 root
+./bin/handshake/hcxtools/usefulscripts/pireadcard:sudo tar --exclude=var/log --exclude=lost+found -zcvpf ../rpiroot.tgz .
+./bin/handshake/hcxtools/usefulscripts/pireadcard:sudo umount boot
+./bin/handshake/hcxtools/usefulscripts/pireadcard:sudo umount root
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo fdisk /dev/$DEVICE
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo mkfs.fat -F32 /dev/"$DEVICE"1
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo mkfs.ext4 /dev/"$DEVICE"2
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo mount /dev/"$DEVICE"1 boot
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo tar -zxvf ../rpiboot.tgz
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo mount /dev/"$DEVICE"2 root
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo tar -zxvf ../rpiroot.tgz
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo umount boot
+./bin/handshake/hcxtools/usefulscripts/piwritecard:sudo umount root
+./bin/handshake/aircrack-ng.sh:    echo "[-] Run as root (sudo)"
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop NetworkManager.service
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop wpa_supplicant.service
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop NetworkManager.service
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop wpa_supplicant.service
+./bin/handshake/hcxdumptool/changelog:$ sudo hcxdumptool -i wlp3s0f0u10u4 --check_driver
+./bin/handshake/hcxdumptool/changelog:$ sudo hcxdumptool -i wlp3s0f0u10u5 --check_driver
+./bin/handshake/hcxdumptool/changelog:$ sudo hcxdumptool -i wlp3s0f0u1 --use_gpsd -o test.pcapng
+./bin/handshake/hcxdumptool/changelog:$ sudo modprobe mac80211_hwsim
+./bin/handshake/hcxdumptool/changelog:$ sudo sudo ip link set hwsim0 up
+./bin/handshake/hcxdumptool/changelog:$ sudo hcxdumptool -i wlan0
+./bin/handshake/hcxdumptool/.github/ISSUE_TEMPLATE/bug_report.md:1. $ sudo hcxdumptool -v
+./bin/handshake/hcxdumptool/.github/ISSUE_TEMPLATE/bug_report.md:2. $ sudo hcxdumptool -l
+./bin/handshake/hcxdumptool/.github/workflows/cpush.yml:           sudo apt update
+./bin/handshake/hcxdumptool/.github/workflows/cpush.yml:           sudo apt install -y libpcap-dev
+./bin/handshake/hcxdumptool/usefulscripts/stopnm:sudo systemctl stop NetworkManager.service
+./bin/handshake/hcxdumptool/usefulscripts/stopnm:sudo systemctl stop wpa_supplicant.service
+./bin/handshake/hcxdumptool/usefulscripts/startnm:sudo systemctl start NetworkManager.service
+./bin/handshake/hcxdumptool/usefulscripts/startnm:sudo systemctl start wpa_supplicant.service
+./bin/handshake/hcxdumptool/usefulscripts/startnlmon:sudo ip link add  nlmon0 type nlmon
+./bin/handshake/hcxdumptool/usefulscripts/startnlmon:sudo ip link set dev nlmon0 up
+./bin/handshake/hcxdumptool/docs/example.md:sudo hcxdumptool -i wlan0 -c 11a --bpf=attack.bpf -w testap.pcapng
+./bin/handshake/hcxdumptool/docs/example.md:sudo hcxdumptool -i wlan0 --rds=3 -c 11a --proberesponsetx=0 --bpf=attack.bpf -w testap.pcapng
+./bin/handshake/hcxdumptool/docs/example.md:sudo hcxdumptool -i wlan0 --rds=3 -c 11a --disable_disassociation --bpf=attack.bpf -w testap.pcapng
+./bin/handshake/hcxdumptool/docs/example.md:sudo hcxdumptool -i wlan0 --rds=3 -c 11a --proberesponsetx=0 --disable_disassociation --bpf=attack.bpf -w testap.pcapng
+./bin/handshake/hcxdumptool/docs/example.md:> hcxdumptool **requires** either super user (root) privileges to run or the use of sudo!
+./bin/handshake/tool.json:  "command": "sudo -n /home/pi/netscout-pi/bin/handshake/aircrack-ng.sh",
+./bin/sniffer/tool.json:  "command": "sudo -n /home/pi/netscout-pi/bin/sniffer/sniffer wlan1 ./state",
+./README.md:sudo shutdown now
+./app.py:    out, err, code = run_cmd(["sudo", "wg", "show", "wg0"])
+./app.py:    out, err, code = run_cmd(["sudo", "wg-quick", "up", "wg0"])
+./app.py:    out, err, code = run_cmd(["sudo", "wg-quick", "down", "wg0"])
+./app.py:    down_out, down_err, _ = run_cmd(["sudo", "wg-quick", "down", "wg0"])
+./app.py:    up_out, up_err, up_code = run_cmd(["sudo", "wg-quick", "up", "wg0"])
+./app.py:            ["sudo", "pkill", "-TERM", "-f", pattern],
+./app.py:            ["sudo", "pkill", "-9", "-f", pattern],
+./app.py:        subprocess.Popen(["sudo", "systemctl", "restart", "netscout"])
+./app.py:        subprocess.Popen(["sudo", "reboot"])
+./app.py:        subprocess.Popen(["sudo", "shutdown", "-h", "now"])
+./scanner/adapter_scan.py:        subprocess.check_call(["sudo", "ip", "link", "set", interface, "down"])
+./scanner/adapter_scan.py:        subprocess.check_call(["sudo", "iw", "dev", interface, "set", "type", mode])
+./scanner/adapter_scan.py:        subprocess.check_call(["sudo", "ip", "link", "set", interface, "up"])
+./venv/share/txtorcon/README.rst:    $ sudo apt-get install --install-suggests python3-txtorcon
+./venv/share/txtorcon/introduction.rst:   $ sudo apt-get install --install-suggests python-txtorcon
+./venv/lib/python3.13/site-packages/pip/_internal/utils/filesystem.py:                # cases where users use sudo without -H flag.
+./venv/lib/python3.13/site-packages/pip/_internal/utils/misc.py:    """Output a warning for sudo users on Unix.
+./venv/lib/python3.13/site-packages/pip/_internal/utils/misc.py:    In a virtual environment, sudo pip still writes to virtualenv.
+./venv/lib/python3.13/site-packages/pip/_internal/cli/base_command.py:                    "that directory. If executing pip with sudo, you should "
+./venv/lib/python3.13/site-packages/pip/_internal/cli/base_command.py:                    "use sudo's -H flag.",
+./venv/lib/python3.13/site-packages/txtorcon-26.6.0.dist-info/METADATA:    $ sudo apt-get install --install-suggests python3-txtorcon

@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetScout Speed Test</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <h1>Speed Test</h1>
+  <p>Internet performance test</p>
+</header>
+
+<main>
+
+<section class="card">
+  <button onclick="location.href='/wifi.html'">
+    ← Back to Wi-Fi
+  </button>
+
+  <button onclick="runSpeedTest()">
+    Run Test
+  </button>
+</section>
+
+<section class="card">
+  <div id="results">
+    Press Run Test
+  </div>
+</section>
+
+</main>
+
+<script>
+async function runSpeedTest() {
+
+  const box = document.getElementById("results");
+
+  box.innerHTML = `
+    <h2>Running Speed Test...</h2>
+    <p>This may take up to 60 seconds.</p>
+  `;
+
+  try {
+
+    const res = await fetch("/api/speedtest");
+    const data = await res.json();
+
+    if (!data.ok) {
+      box.innerHTML = data.error;
+      return;
+    }
+
+    box.innerHTML = `
+      <h2>Results</h2>
+
+      <p><b>Latency:</b> ${data.ping}</p>
+      <p><b>Download:</b> ${data.download}</p>
+      <p><b>Upload:</b> ${data.upload}</p>
+    `;
+
+  } catch (err) {
+    box.innerHTML = "Speed test failed.";
+  }
+}
+</script>
+
+</body>
+</html>

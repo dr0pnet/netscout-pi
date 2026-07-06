@@ -1,0 +1,18 @@
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop NetworkManager.service
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop wpa_supplicant.service
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop NetworkManager.service
+./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop wpa_supplicant.service
+./bin/handshake/hcxdumptool/usefulscripts/stopnm:sudo systemctl stop NetworkManager.service
+./bin/handshake/hcxdumptool/usefulscripts/stopnm:sudo systemctl stop wpa_supplicant.service
+./bin/handshake/hcxdumptool/usefulscripts/startnm:sudo systemctl start NetworkManager.service
+./bin/handshake/hcxdumptool/usefulscripts/startnm:sudo systemctl start wpa_supplicant.service
+./app.py:        subprocess.Popen(["sudo", "systemctl", "restart", "netscout"])
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop NetworkManager.service
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop wpa_supplicant.service
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop NetworkManager.service
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/changelog:        $ sudo systemctl stop wpa_supplicant.service
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/usefulscripts/stopnm:sudo systemctl stop NetworkManager.service
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/usefulscripts/stopnm:sudo systemctl stop wpa_supplicant.service
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/usefulscripts/startnm:sudo systemctl start NetworkManager.service
+./docs/sudo_usage.txt:./bin/handshake/hcxdumptool/usefulscripts/startnm:sudo systemctl start wpa_supplicant.service
+./docs/sudo_usage.txt:./app.py:        subprocess.Popen(["sudo", "systemctl", "restart", "netscout"])

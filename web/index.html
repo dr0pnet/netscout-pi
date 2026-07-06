@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NETSC0UT PI</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div id="mini-system-status" class="mini-system-status">
+    Loading system...
+  </div>
+<div class="radar-orb"></div>
+
+  <div class="logo-container">
+    <img src="/netscout-logo.png" class="logo" onerror="this.style.display='none'">
+  </div>
+
+  <h1>NETSC0UT PI</h1>
+  <p>Portable Network Appliance</p>
+</header>
+
+<main>
+
+<section class="summary-grid">
+
+  <div class="summary-card" onclick="location.href='/devices.html'">
+    <h3>Devices</h3>
+  </div>
+
+  <div class="summary-card" onclick="location.href='/tools.html'">
+    <h3>Tools</h3>
+  </div>
+
+  <div class="summary-card" onclick="location.href='/wifi.html'">
+    <h3>Wi-Fi</h3>
+  </div>
+
+  <div class="summary-card" onclick="location.href='/bluetooth.html'">
+    <h3>Bluetooth</h3>
+  </div>
+
+  <div class="summary-card" onclick="location.href='/system.html'">
+    <h3>System</h3>
+    <div id="system-status">OK</div>
+  </div>
+
+  <div class="summary-card" onclick="location.href='/terminal.html'">
+    <h3>Terminal</h3>
+    <div>▣</div>
+  </div>
+
+</section>
+
+</main>
+
+<script>
+async function loadStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+
+    document.getElementById("system-status").innerText =
+      data.status === "running" ? "OK" : data.status;
+  } catch (err) {
+    document.getElementById("system-status").innerText = "ERR";
+  }
+}
+
+
+async function loadMiniSystemStatus() {
+  const box = document.getElementById("mini-system-status");
+
+  try {
+    const res = await fetch("/api/system");
+    const data = await res.json();
+
+    box.innerHTML = `
+      <b>System</b><br>
+      Hostname: ${data.hostname}<br>
+      LAN: ${data.ip_address}<br>
+      Public: <span id="mini-public-ip">Checking...</span><br>
+      CPU: ${data.cpu_percent}%<br>
+      RAM: ${data.ram_percent}%<br>
+      Disk: ${data.disk_percent}%<br>
+      Uptime: ${Math.floor(data.uptime_seconds / 60)} min<br>
+      VPN: <span id="mini-vpn">Checking...</span>
+    `;
+
+  } catch (err) {
+    box.innerHTML = "System unavailable";
+  }
+}
+
+async function loadMiniVpnStatus() {
+  try {
+    const res = await fetch("/api/vpn/status");
+    const data = await res.json();
+
+    const vpn = document.getElementById("mini-vpn");
+    const publicIp = document.getElementById("mini-public-ip");
+
+    if (publicIp) {
+      publicIp.textContent = data.public_ip || "-";
+    }
+
+    if (!vpn) return;
+
+    if (data.connected) {
+      vpn.textContent = "Connected";
+      vpn.style.color = "#00ff66";
+    } else {
+      vpn.textContent = "Disconnected";
+      vpn.style.color = "#ff4444";
+    }
+
+  } catch (err) {
+    const vpn = document.getElementById("mini-vpn");
+    const publicIp = document.getElementById("mini-public-ip");
+
+    if (publicIp) {
+      publicIp.textContent = "Error";
+    }
+
+    if (vpn) {
+      vpn.textContent = "Error";
+      vpn.style.color = "#ff4444";
+    }
+  }
+}
+
+
+async function refreshHome() {
+  await loadStatus();
+  await loadMiniSystemStatus();
+  await loadMiniVpnStatus();
+}
+
+refreshHome();
+
+setInterval(refreshHome, 10000);
+</script>
+
+</body>
+</html>
